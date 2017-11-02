@@ -24,6 +24,10 @@ body {
     );
 }
 
+.cyclist-dot {
+    r: 7;
+}
+
 .chart {
     max-height: 100%;
 }
