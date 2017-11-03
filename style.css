@@ -26,8 +26,21 @@ body {
 
 .cyclist-dot {
     r: 7;
+    transition: .3s;
+}
+
+.cyclist-dot:hover {
+    r: 9;
 }
 
 .chart {
     max-height: 100%;
+}
+.tick text {
+    font: 12px sans-serif;
+}
+
+.axis-text {
+    text-anchor: middle;
+    font: 16px sans-serif;
 }
