@@ -24,23 +24,30 @@ body {
     );
 }
 
+.chart {
+    max-height: 100%;
+}
 .cyclist-dot {
     r: 7;
     transition: .3s;
 }
-
 .cyclist-dot:hover {
     r: 9;
 }
-
-.chart {
-    max-height: 100%;
-}
 .tick text {
-    font: 12px sans-serif;
+    font: 14px sans-serif;
 }
-
-.axis-text {
+.perpendicular {
+    fill: none;
+    stroke: gray;
+    shape-rendering: crisp-edges;
+    stroke-dasharray: 10 4;
+}
+.text {
     text-anchor: middle;
     font: 16px sans-serif;
+}
+.title {
+    text-anchor: middle;
+    font: 22px sans-serif;
 }

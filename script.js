@@ -13,33 +13,52 @@ const createDot = (chart, id, fromColor, toColor) => {
     .attr('stop-color', toColor);
 };
 
-const setAxisLabels = (chart, width, height) => {
+const setLabels = (chart, width, height) => {
   chart.append('text')
     .attr('x', width / 2)
     .attr('y', height - 10)
-    .classed('axis-text', true)
+    .classed('text', true)
     .text('Seconds behind fastest time');
 
   chart.append('text')
     .attr('transform', 'rotate(-90)')
-    .attr('y', 20)
-    .attr('x', -height / 2)
-    .classed('axis-text', true)
+    .attr('y', -25)
+    .attr('x', -27)
+    .classed('text', true)
     .text('Ranking');
+
+  chart.append('text')
+    .attr('x', width / 2)
+    .attr('y', 10)
+    .classed('title', true)
+    .text('35 Fastest times up Alpe d\'Huez');
+};
+
+const setPerpendiculars = (chart, data, xScale, yScale) => {
+  const axesPerpendicularLines = data.filter(({ Place }) => Place % 5 === 0 && Place !== 35);
+
+  chart.selectAll('line')
+    .data(axesPerpendicularLines)
+    .enter()
+    .append('line')
+    .classed('perpendicular', true)
+    .attr('y1', ({ Place }) => yScale(Place))
+    .attr('x2', ({ Seconds }) => xScale(Seconds))
+    .attr('y2', ({ Place }) => yScale(Place));
 };
 
 const startApp = () => {
   const fetchURL = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/cyclist-data.json';
   const margin = {
-    top: 10, left: 10, bottom: 20, right: 10,
+    top: 20, left: 20, bottom: 20, right: 0,
   };
   const viewBox = { width: 1000, height: 600 };
   const width = viewBox.width - margin.left - margin.right;
   const height = viewBox.height - margin.top - margin.bottom;
   const xScale = d3.scaleLinear().range([0, width]);
   const yScale = d3.scaleLinear().range([0, height]);
-  const xAxis = d3.axisBottom().scale(xScale).tickSizeOuter(0);
-  const yAxis = d3.axisLeft().scale(yScale).tickSizeOuter(0);
+  const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
+  const yAxis = d3.axisLeft(yScale).tickSizeOuter(0);
   const chart = d3.select('.chart')
     .attr('viewBox', `0 0 ${viewBox.width} ${viewBox.height}`)
     .append('g')
@@ -47,11 +66,11 @@ const startApp = () => {
 
   createDot(chart, 'dopingDot', 'rgb(255, 129, 120)', 'rgb(255, 23, 23)');
   createDot(chart, 'cleanDot', 'rgb(129, 255, 120)', 'rgb(23, 255, 23)');
-  setAxisLabels(chart, width, height);
+  setLabels(chart, width, height);
 
   d3.json(fetchURL, (error, data) => {
-    const fastestTime = d3.min(data, ({ Seconds }) => Seconds);
-    const slowestTime = d3.max(data, ({ Seconds }) => Seconds);
+    const [fastestTime, slowestTime] = d3.extent(data, ({ Seconds }) => Seconds);
+
 
     xAxis.tickFormat(seconds => seconds - fastestTime)
       .tickValues(d3.ticks(fastestTime, slowestTime, 15));
@@ -60,6 +79,8 @@ const startApp = () => {
       .map(({ Place }) => Place));
     xScale.domain([fastestTime - 3, slowestTime]);
     yScale.domain([1, d3.max(data, ({ Place }) => Place + 1)]);
+
+    setPerpendiculars(chart, data, xScale, yScale);
 
     chart.selectAll('circle')
       .data(data)
