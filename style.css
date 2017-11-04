@@ -11,6 +11,7 @@ body {
     height: 100%;
     padding: 20px;
     min-height: 400px;
+    max-height: 600px;
     margin-bottom: 20px;
     text-align: center;
     background: white;
@@ -47,7 +48,14 @@ body {
     text-anchor: middle;
     font: 16px sans-serif;
 }
+.text--start {
+    text-anchor: start;
+}
 .title {
     text-anchor: middle;
     font: 22px sans-serif;
+}
+.legend-box {
+    fill: transparent;
+    stroke: black;
 }

@@ -13,7 +13,7 @@ const createDot = (chart, id, fromColor, toColor) => {
     .attr('stop-color', toColor);
 };
 
-const setLabels = (chart, width, height) => {
+const drawLabels = (chart, width, height) => {
   chart.append('text')
     .attr('x', width / 2)
     .attr('y', height - 10)
@@ -34,7 +34,7 @@ const setLabels = (chart, width, height) => {
     .text('35 Fastest times up Alpe d\'Huez');
 };
 
-const setPerpendiculars = (chart, data, xScale, yScale) => {
+const drawPerpendiculars = (chart, data, xScale, yScale) => {
   const axesPerpendicularLines = data.filter(({ Place }) => Place % 5 === 0 && Place !== 35);
 
   chart.selectAll('line')
@@ -45,6 +45,45 @@ const setPerpendiculars = (chart, data, xScale, yScale) => {
     .attr('y1', ({ Place }) => yScale(Place))
     .attr('x2', ({ Seconds }) => xScale(Seconds))
     .attr('y2', ({ Place }) => yScale(Place));
+};
+
+const drawLegendItem = (legendBox, legendType) => {
+  const legendItemMargin = 15;
+  const textHeight = 6;
+  const lineHeight = 20;
+
+  legendBox.append('circle')
+    .classed('cyclist-dot', true)
+    .attr('cx', legendItemMargin)
+    .attr('cy', legendType === 'clean' ? legendItemMargin : legendItemMargin + lineHeight)
+    .attr('fill', `url(#${legendType}Dot)`);
+
+  legendBox.append('text')
+    .attr('x', legendItemMargin * 2)
+    .attr('y', legendType === 'clean'
+      ? legendItemMargin + textHeight
+      : legendItemMargin + lineHeight + textHeight)
+    .classed('text text--start', true)
+    .text(legendType === 'clean'
+      ? 'No doping allegations'
+      : 'Riders with doping allegations');
+};
+
+const drawLegend = (chart, height) => {
+  const legendBoxHeight = 50;
+  const legendBoxWidth = 260;
+  const legendMargin = 10;
+  const legendBox = chart.append('g')
+    .attr('transform', `translate(${legendMargin}, ${height - legendBoxHeight - legendMargin})`);
+
+  legendBox.append('rect')
+    .classed('legend-box', true)
+    .attr('height', legendBoxHeight)
+    .attr('width', legendBoxWidth);
+
+
+  drawLegendItem(legendBox, 'clean');
+  drawLegendItem(legendBox, 'doping');
 };
 
 const startApp = () => {
@@ -66,7 +105,7 @@ const startApp = () => {
 
   createDot(chart, 'dopingDot', 'rgb(255, 129, 120)', 'rgb(255, 23, 23)');
   createDot(chart, 'cleanDot', 'rgb(129, 255, 120)', 'rgb(23, 255, 23)');
-  setLabels(chart, width, height);
+  drawLabels(chart, width, height);
 
   d3.json(fetchURL, (error, data) => {
     const [fastestTime, slowestTime] = d3.extent(data, ({ Seconds }) => Seconds);
@@ -80,7 +119,7 @@ const startApp = () => {
     xScale.domain([fastestTime - 3, slowestTime]);
     yScale.domain([1, d3.max(data, ({ Place }) => Place + 1)]);
 
-    setPerpendiculars(chart, data, xScale, yScale);
+    drawPerpendiculars(chart, data, xScale, yScale);
 
     chart.selectAll('circle')
       .data(data)
@@ -95,6 +134,8 @@ const startApp = () => {
     chart.append('g')
       .attr('transform', `translate(0, ${height})`)
       .call(xAxis);
+
+    drawLegend(chart, height);
   });
 };
 
