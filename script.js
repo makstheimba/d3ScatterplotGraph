@@ -30,8 +30,8 @@ const drawLabels = (chart, width, height) => {
   chart.append('text')
     .attr('x', width / 2)
     .attr('y', 10)
-    .classed('title', true)
-    .text('35 Fastest times up Alpe d\'Huez');
+    .classed('text text--title', true)
+    .text('35 Fastest bycicle times up Alpe d\'Huez');
 };
 
 const drawPerpendiculars = (chart, data, xScale, yScale) => {
@@ -72,18 +72,76 @@ const drawLegendItem = (legendBox, legendType) => {
 const drawLegend = (chart, height) => {
   const legendBoxHeight = 50;
   const legendBoxWidth = 260;
-  const legendMargin = 10;
+  const legendBoxMargin = 10;
   const legendBox = chart.append('g')
-    .attr('transform', `translate(${legendMargin}, ${height - legendBoxHeight - legendMargin})`);
+    .attr('transform', `translate(${legendBoxMargin}, ${height - legendBoxHeight - legendBoxMargin})`);
 
   legendBox.append('rect')
-    .classed('legend-box', true)
+    .classed('info-box', true)
     .attr('height', legendBoxHeight)
     .attr('width', legendBoxWidth);
 
-
   drawLegendItem(legendBox, 'clean');
   drawLegendItem(legendBox, 'doping');
+};
+
+const drawTooltip = (chart, width) => {
+  const tooltipHeight = 140;
+  const tooltipWidth = 260;
+  const tooltipTopMargin = 20;
+
+  const tooltip = chart.append('g')
+    .classed('tooltip', true)
+    .attr('transform', `translate(${width - tooltipWidth}, ${tooltipTopMargin})`);
+
+  tooltip.append('rect')
+    .classed('info-box', true)
+    .attr('height', tooltipHeight)
+    .attr('width', tooltipWidth);
+
+  tooltip.append('text')
+    .classed('text initial-tip', true)
+    .attr('x', tooltipWidth / 2)
+    .attr('y', tooltipHeight / 2)
+    .text('Hover over a dot to see rider\'s info');
+};
+
+const drawTooltipLables = (tooltip) => {
+  const tooltipTextNodes = [
+    { type: 'Nationality', x: 10, y: 50 },
+    { type: 'Year', x: 10, y: 75 },
+    { type: 'Time', x: 130, y: 75 },
+  ];
+
+  tooltip.select('.initial-tip').remove();
+
+  tooltip.append('text')
+    .classed('text Name', true)
+    .attr('x', 130)
+    .attr('y', 25);
+
+  tooltip.append('text')
+    .classed('text Doping1', true)
+    .attr('x', 135)
+    .attr('y', 100);
+
+  tooltip.append('text')
+    .classed('text Doping2', true)
+    .attr('x', 135)
+    .attr('y', 125);
+
+  tooltipTextNodes.forEach((text) => {
+    tooltip.append('text')
+      .classed('text text--bold text--start', true)
+      .attr('x', text.x)
+      .attr('y', text.y)
+      .text(text.type);
+
+    tooltip.append('text')
+      .classed(`text text--start ${text.type}`, true)
+      .attr('x', text.x + (text.type.length === 4 ? 40 : 90))
+      .attr('y', text.y);
+  });
 };
 
 const startApp = () => {
@@ -110,7 +168,6 @@ const startApp = () => {
   d3.json(fetchURL, (error, data) => {
     const [fastestTime, slowestTime] = d3.extent(data, ({ Seconds }) => Seconds);
 
-
     xAxis.tickFormat(seconds => seconds - fastestTime)
       .tickValues(d3.ticks(fastestTime, slowestTime, 15));
     yAxis.tickValues(data
@@ -120,6 +177,8 @@ const startApp = () => {
     yScale.domain([1, d3.max(data, ({ Place }) => Place + 1)]);
 
     drawPerpendiculars(chart, data, xScale, yScale);
+    drawLegend(chart, height);
+    drawTooltip(chart, width);
 
     chart.selectAll('circle')
       .data(data)
@@ -128,14 +187,40 @@ const startApp = () => {
       .classed('cyclist-dot', true)
       .attr('cx', ({ Seconds }) => xScale(Seconds))
       .attr('cy', ({ Place }) => yScale(Place))
-      .attr('fill', ({ Doping }) => `url(#${Doping === '' ? 'clean' : 'doping'}Dot)`);
+      .attr('fill', ({ Doping }) => `url(#${Doping === '' ? 'clean' : 'doping'}Dot)`)
+      .on('mouseover', function (entry) {
+        const tooltip = d3.select('.tooltip');
+        const tooltipInfoTypes = ['Name', 'Nationality', 'Year', 'Time'];
+
+        if (!d3.select('.initial-tip').empty()) {
+          drawTooltipLables(tooltip);
+        }
+
+        d3.select('.cyclist-dot--large').classed('cyclist-dot--large', false);
+
+        tooltipInfoTypes.forEach((infoType) => {
+          tooltip.select(`.${infoType}`)
+            .text(entry[infoType]);
+          
+          if (entry.Doping === '') {
+            tooltip.select('.Doping1').text('This rider has no doping allegations');
+            tooltip.select('.Doping2').text('');
+          } else {
+            const maxStringLength = 34;
+            const firstHalfIndex = entry.Doping.lastIndexOf(' ', maxStringLength);
+
+            tooltip.select('.Doping1').text(entry.Doping.slice(0, firstHalfIndex));
+            tooltip.select('.Doping2').text(entry.Doping.slice(firstHalfIndex));
+          }
+        });
+
+        d3.select(this).classed('cyclist-dot--large', true);
+      });
 
     chart.append('g').call(yAxis);
     chart.append('g')
       .attr('transform', `translate(0, ${height})`)
       .call(xAxis);
-
-    drawLegend(chart, height);
   });
 };
 

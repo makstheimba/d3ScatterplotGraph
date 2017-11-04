@@ -35,6 +35,9 @@ body {
 .cyclist-dot:hover {
     r: 9;
 }
+.cyclist-dot--large {
+    r: 9;
+}
 .tick text {
     font: 14px sans-serif;
 }
@@ -51,11 +54,13 @@ body {
 .text--start {
     text-anchor: start;
 }
-.title {
-    text-anchor: middle;
+.text--bold {
+    font-weight: bold;
+}
+.text--title {
     font: 22px sans-serif;
 }
-.legend-box {
+.info-box {
     fill: transparent;
     stroke: black;
 }
