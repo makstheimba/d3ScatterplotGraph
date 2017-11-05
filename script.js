@@ -172,7 +172,7 @@ const startApp = () => {
     chart.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
 
     chart.selectAll('circle')
-      .data(data)
+      .data(data, entry => entry)
       .enter()
       .append('circle')
       .classed('cyclist-dot', true)
