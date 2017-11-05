@@ -1,35 +1,23 @@
 const createDot = (chart, id, fromColor, toColor) => {
-  const cyclistDot = chart.append('defs')
-    .append('radialGradient')
-    .attr('id', id)
-    .attr('fy', '40%')
-    .attr('fx', '40%');
+  const cyclistDot = chart.append('defs').append('radialGradient').attrs({ id, fy: '40%', fx: '40%' });
 
-  cyclistDot.append('stop')
-    .attr('offset', '0%')
-    .attr('stop-color', fromColor);
-  cyclistDot.append('stop')
-    .attr('offset', '100%')
-    .attr('stop-color', toColor);
+  cyclistDot.append('stop').attrs({ offset: '0%', 'stop-color': fromColor });
+  cyclistDot.append('stop').attrs({ offset: '100%', 'stop-color': toColor });
 };
 
 const drawLabels = (chart, width, height) => {
   chart.append('text')
-    .attr('x', width / 2)
-    .attr('y', height - 10)
+    .attrs({ x: width / 2, y: height - 10 })
     .classed('text', true)
     .text('Seconds behind fastest time');
 
   chart.append('text')
-    .attr('transform', 'rotate(-90)')
-    .attr('y', -25)
-    .attr('x', -27)
+    .attrs({ transform: 'rotate(-90)', x: -27, y: -25 })
     .classed('text', true)
     .text('Ranking');
 
   chart.append('text')
-    .attr('x', width / 2)
-    .attr('y', 10)
+    .attrs({ x: width / 2, y: 10 })
     .classed('text text--title', true)
     .text('35 Fastest bycicle times up Alpe d\'Huez');
 };
@@ -42,9 +30,7 @@ const drawPerpendiculars = (chart, data, xScale, yScale) => {
     .enter()
     .append('line')
     .classed('perpendicular', true)
-    .attr('y1', ({ Place }) => yScale(Place))
-    .attr('x2', ({ Seconds }) => xScale(Seconds))
-    .attr('y2', ({ Place }) => yScale(Place));
+    .attrs(({ Place, Seconds }) => ({ y1: yScale(Place), y2: yScale(Place), x2: xScale(Seconds) }));
 };
 
 const drawLegendItem = (legendBox, legendType) => {
@@ -54,19 +40,16 @@ const drawLegendItem = (legendBox, legendType) => {
 
   legendBox.append('circle')
     .classed('cyclist-dot', true)
-    .attr('cx', legendItemMargin)
     .attr('cy', legendType === 'clean' ? legendItemMargin : legendItemMargin + lineHeight)
-    .attr('fill', `url(#${legendType}Dot)`);
+    .attrs({ cx: legendItemMargin, fill: `url(#${legendType}Dot)` });
 
   legendBox.append('text')
     .attr('x', legendItemMargin * 2)
     .attr('y', legendType === 'clean'
       ? legendItemMargin + textHeight
-      : legendItemMargin + lineHeight + textHeight)
+      : legendItemMargin + textHeight + lineHeight)
     .classed('text text--start', true)
-    .text(legendType === 'clean'
-      ? 'No doping allegations'
-      : 'Riders with doping allegations');
+    .text(legendType === 'clean' ? 'No doping allegations' : 'Riders with doping allegations');
 };
 
 const drawLegend = (chart, height) => {
@@ -78,8 +61,7 @@ const drawLegend = (chart, height) => {
 
   legendBox.append('rect')
     .classed('info-box', true)
-    .attr('height', legendBoxHeight)
-    .attr('width', legendBoxWidth);
+    .attrs({ height: legendBoxHeight, width: legendBoxWidth });
 
   drawLegendItem(legendBox, 'clean');
   drawLegendItem(legendBox, 'doping');
@@ -87,7 +69,7 @@ const drawLegend = (chart, height) => {
 
 const drawTooltip = (chart, width) => {
   const tooltipHeight = 140;
-  const tooltipWidth = 260;
+  const tooltipWidth = 280;
   const tooltipTopMargin = 20;
 
   const tooltip = chart.append('g')
@@ -96,59 +78,66 @@ const drawTooltip = (chart, width) => {
 
   tooltip.append('rect')
     .classed('info-box', true)
-    .attr('height', tooltipHeight)
-    .attr('width', tooltipWidth);
+    .attrs({ height: tooltipHeight, width: tooltipWidth });
 
   tooltip.append('text')
     .classed('text initial-tip', true)
-    .attr('x', tooltipWidth / 2)
-    .attr('y', tooltipHeight / 2)
+    .attrs({ x: tooltipWidth / 2, y: tooltipHeight / 2 })
     .text('Hover over a dot to see rider\'s info');
 };
 
 const drawTooltipLables = (tooltip) => {
+  const { width: tooltipWidth } = tooltip.node().getBBox();
   const tooltipTextNodes = [
     { type: 'Nationality', x: 10, y: 50 },
     { type: 'Year', x: 10, y: 75 },
-    { type: 'Time', x: 130, y: 75 },
+    { type: 'Time', x: tooltipWidth / 2, y: 75 },
   ];
 
   tooltip.select('.initial-tip').remove();
 
-  tooltip.append('text')
-    .classed('text Name', true)
-    .attr('x', 130)
-    .attr('y', 25);
+  tooltip.append('text').classed('text Name', true).attrs({ x: tooltipWidth / 2, y: 25 });
+  tooltip.append('text').classed('text Doping1', true).attrs({ x: tooltipWidth / 2, y: 100 });
+  tooltip.append('text').classed('text Doping2', true).attrs({ x: tooltipWidth / 2, y: 125 });
 
-  tooltip.append('text')
-    .classed('text Doping1', true)
-    .attr('x', 135)
-    .attr('y', 100);
-
-  tooltip.append('text')
-    .classed('text Doping2', true)
-    .attr('x', 135)
-    .attr('y', 125);
-
-  tooltipTextNodes.forEach((text) => {
+  tooltipTextNodes.forEach(({ type, x, y }) => {
+    tooltip.append('text').classed('text text--bold text--start', true).attrs({ x, y }).text(type);
     tooltip.append('text')
-      .classed('text text--bold text--start', true)
-      .attr('x', text.x)
-      .attr('y', text.y)
-      .text(text.type);
-
-    tooltip.append('text')
-      .classed(`text text--start ${text.type}`, true)
-      .attr('x', text.x + (text.type.length === 4 ? 40 : 90))
-      .attr('y', text.y);
+      .classed(`text text--start ${type}`, true)
+      .attrs({ x: x + (type.length === 4 ? 40 : 90), y });
   });
 };
 
+function redrawTooltipInfo(cyclistInfo) {
+  const tooltip = d3.select('.tooltip');
+  const tooltipInfoTypes = ['Name', 'Nationality', 'Year', 'Time'];
+
+  if (!d3.select('.initial-tip').empty()) {
+    drawTooltipLables(tooltip);
+  }
+
+  d3.select('.cyclist-dot--large').classed('cyclist-dot--large', false);
+  d3.select(this).classed('cyclist-dot--large', true);
+
+  tooltipInfoTypes.forEach((infoType) => {
+    tooltip.select(`.${infoType}`).text(cyclistInfo[infoType]);
+
+    if (cyclistInfo.Doping === '') {
+      tooltip.select('.Doping1').text('This rider has no doping allegations');
+      tooltip.select('.Doping2').text('');
+    } else {
+      const maxStringLength = 35;
+      const firstHalfIndex = cyclistInfo.Doping.lastIndexOf(' ', maxStringLength);
+
+      tooltip.select('.Doping1').text(cyclistInfo.Doping.slice(0, firstHalfIndex));
+      tooltip.select('.Doping2').text(cyclistInfo.Doping.slice(firstHalfIndex));
+    }
+  });
+}
+
 const startApp = () => {
   const fetchURL = 'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/cyclist-data.json';
-  const margin = {
-    top: 20, left: 20, bottom: 20, right: 0,
-  };
+  const margin = { top: 20, left: 20, bottom: 20, right: 0 };
   const viewBox = { width: 1000, height: 600 };
   const width = viewBox.width - margin.left - margin.right;
   const height = viewBox.height - margin.top - margin.bottom;
@@ -179,48 +168,17 @@ const startApp = () => {
     drawPerpendiculars(chart, data, xScale, yScale);
     drawLegend(chart, height);
     drawTooltip(chart, width);
+    chart.append('g').call(yAxis);
+    chart.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
 
     chart.selectAll('circle')
       .data(data)
       .enter()
       .append('circle')
       .classed('cyclist-dot', true)
-      .attr('cx', ({ Seconds }) => xScale(Seconds))
-      .attr('cy', ({ Place }) => yScale(Place))
+      .attrs(({ Seconds, Place }) => ({ cx: xScale(Seconds), cy: yScale(Place) }))
       .attr('fill', ({ Doping }) => `url(#${Doping === '' ? 'clean' : 'doping'}Dot)`)
-      .on('mouseover', function (entry) {
-        const tooltip = d3.select('.tooltip');
-        const tooltipInfoTypes = ['Name', 'Nationality', 'Year', 'Time'];
-
-        if (!d3.select('.initial-tip').empty()) {
-          drawTooltipLables(tooltip);
-        }
-
-        d3.select('.cyclist-dot--large').classed('cyclist-dot--large', false);
-
-        tooltipInfoTypes.forEach((infoType) => {
-          tooltip.select(`.${infoType}`)
-            .text(entry[infoType]);
-          
-          if (entry.Doping === '') {
-            tooltip.select('.Doping1').text('This rider has no doping allegations');
-            tooltip.select('.Doping2').text('');
-          } else {
-            const maxStringLength = 34;
-            const firstHalfIndex = entry.Doping.lastIndexOf(' ', maxStringLength);
-
-            tooltip.select('.Doping1').text(entry.Doping.slice(0, firstHalfIndex));
-            tooltip.select('.Doping2').text(entry.Doping.slice(firstHalfIndex));
-          }
-        });
-
-        d3.select(this).classed('cyclist-dot--large', true);
-      });
-
-    chart.append('g').call(yAxis);
-    chart.append('g')
-      .attr('transform', `translate(0, ${height})`)
-      .call(xAxis);
+      .on('mouseover', redrawTooltipInfo);
   });
 };
 
